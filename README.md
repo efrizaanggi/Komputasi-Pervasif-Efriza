@@ -56,4 +56,11 @@ Aplikasi ini mensimulasikan sistem ujian online dengan fitur pengawasan cerdas, 
 - Page Visibility API
 - DOM Events (mousemove, keydown, etc.)
 
+
 ---
+
+## ▶️ Cara Menjalankan Project
+
+### 1. Clone / Download Project
+```bash
+git clone https://github.com/username/repository-name.git
