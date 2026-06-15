@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Quiz Exam 🧠 Mulai Quiz </title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Animasi petal jatuh (background) -->
+  <canvas id="petal-canvas"></canvas>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 1: LOGIN
+  ════════════════════════════════════════ -->
+  <div id="screen-login" class="screen active">
+    <div class="login-card">
+      <span class="logo-flower">🧠</span>
+      <h1>Smart Quiz Exam</h1>
+      <p class="subtitle">Context-Aware Smart Quiz Platform</p>
+
+      <div class="form-group">
+        <label>Nama Lengkap</label>
+        <input type="text" id="input-name" placeholder="Misal: Siti Aulia Rahma" />
+      </div>
+      <div class="form-group">
+        <label>NIM</label>
+        <input type="text" id="input-nim" placeholder="Misal: 2210512045" />
+      </div>
+
+      <button class="btn-start" onclick="startExam()">🧠 Mulai Ujian</button>
+
+      <p class="login-footer">
+        Ujian terdiri dari 5 soal pilihan ganda · Waktu 7 menit<br/>
+        Sistem akan memantau kehadiran &amp; perhatianmu secara real-time.
+      </p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 2: EXAM
+  ════════════════════════════════════════ -->
+  <div id="screen-exam" class="screen">
+
+    <!-- Overlay AFK -->
+    <div id="overlay-afk" class="overlay-banner">
+      <div class="banner-icon">🌿</div>
+      <h2>Sebentar, kamu masih di sana?</h2>
+      <p>Tidak ada aktivitas selama 20 detik. Timer ujianmu dijeda. Klik tombol di bawah untuk melanjutkan.</p>
+      <button class="btn-resume" onclick="resumeFromAfk()">Saya Kembali ✨</button>
+    </div>
+
+    <!-- Top bar -->
+    <div class="exam-topbar">
+      <div class="topbar-brand">🧠 Smart Quiz Exam </div>
+      <div class="topbar-meta">
+        <div class="status-badges">
+          <span id="badge-tab" class="badge badge-ok">👁 Fokus</span>
+          <span id="badge-afk" class="badge badge-ok">🐇 Aktif</span>
+        </div>
+        <div class="timer-pill" id="timer-display">07:00</div>
+      </div>
+    </div>
+
+    <!-- Main body -->
+    <div class="exam-body">
+
+      <!-- Question panel -->
+      <div class="question-panel">
+        <div class="progress-bar-wrap">
+          <div class="progress-label">
+            <span id="progress-text">Soal 1 dari 5</span>
+            <span id="answered-count">0 dijawab</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width:20%"></div>
+          </div>
+        </div>
+
+        <div class="question-card">
+          <div class="question-number" id="q-number">SOAL 01 / 05</div>
+          <p class="question-text" id="q-text"></p>
+          <div class="choices" id="q-choices"></div>
+        </div>
+
+        <div class="nav-btns">
+          <button class="btn-nav" onclick="prevQ()">← Sebelumnya</button>
+          <button class="btn-submit" onclick="submitExam()">✨ Selesai &amp; Lihat Hasil</button>
+          <button class="btn-nav" onclick="nextQ()">Berikutnya →</button>
+        </div>
+      </div>
+
+      <!-- Side panel -->
+      <div class="side-panel">
+
+        <div class="side-card">
+          <h4>Navigasi Soal</h4>
+          <div class="question-dots" id="q-dots"></div>
+        </div>
+
+        <div class="side-card">
+          <h4>Live Stats</h4>
+          <div class="stat-row"><span>Pindah tab</span><span class="stat-val" id="stat-tabs">0×</span></div>
+          <div class="stat-row"><span>Total AFK</span><span class="stat-val" id="stat-afk">0 det</span></div>
+          <div class="stat-row"><span>Gerakan mouse</span><span class="stat-val" id="stat-mouse">0</span></div>
+        </div>
+
+        <div class="side-card">
+          <h4>🖱 Jejak Aktivitas Mouse</h4>
+          <canvas id="heatmap-canvas"></canvas>
+          <p class="heatmap-label">Intensitas gerakan real-time</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       LOCK OVERLAY
+  ════════════════════════════════════════ -->
+  <div id="lock-overlay">
+    <div style="font-size:3rem;">🔒</div>
+    <h2>Ujian Dikunci</h2>
+    <p>Kamu berpindah tab terlalu banyak (<span id="lock-count">3</span>×). Ujian ini otomatis terkunci dan nilai kamu akan diproses apa adanya.</p>
+    <button class="btn-resume" onclick="forceSubmit()">Lihat Hasil Akhir 📋</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCREEN 3: RESULT
+  ════════════════════════════════════════ -->
+  <div id="screen-result" class="screen">
+    <div class="result-card">
+
+      <div class="result-header">
+        <div class="score-ring-wrap">
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <circle cx="70" cy="70" r="58" fill="none" stroke="#f5d5e2" stroke-width="10"/>
+            <circle id="score-arc" cx="70" cy="70" r="58" fill="none" stroke="#c4607e" stroke-width="10"
+              stroke-linecap="round" stroke-dasharray="364.4" stroke-dashoffset="364.4"
+              transform="rotate(-90 70 70)" style="transition: stroke-dashoffset 1.2s ease;"/>
+          </svg>
+          <div class="score-inner">
+            <span class="score-number" id="res-score">0</span>
+            <span class="score-label">/ 100</span>
+          </div>
+        </div>
+        <div class="result-name" id="res-name">—</div>
+        <div class="result-verdict" id="res-verdict">—</div>
+      </div>
+
+      <div class="result-section">
+        <h3>📝 Review Jawaban</h3>
+        <div id="res-answers"></div>
+      </div>
+
+      <div class="result-section">
+        <h3>📓 Catatan Perilaku (Behavior Log)</h3>
+        <div id="res-diary"></div>
+      </div>
+
+      <div class="result-section">
+        <h3>🖱 Jejak Aktivitas Mouse</h3>
+        <canvas id="result-heatmap"></canvas>
+      </div>
+
+      <button class="btn-retry" onclick="resetApp()">🧠 Coba Lagi</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       SCRIPTS — urutan penting!
+  ════════════════════════════════════════ -->
+  <script src="assets/petals.js"></script>
+  <script src="js/questions.js"></script>
+  <script src="js/heatmap.js"></script>
+  <script src="js/pervasive.js"></script>
+  <script src="js/exam.js"></script>
+  <script src="js/result.js"></script>
+</body>
+</html>
